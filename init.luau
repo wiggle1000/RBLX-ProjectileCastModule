@@ -1,4 +1,5 @@
 --!strict
+
 -- ProjectileCastModule V1.0.1 by wiggle1000
 -- Scroll to bottom for license information and copyright notice
 
