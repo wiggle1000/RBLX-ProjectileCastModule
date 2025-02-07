@@ -1,5 +1,5 @@
 --!strict
--- ProjectileCast.lua V1.0.0 by wiggle1000
+-- ProjectileCastModule V1.0.1 by wiggle1000
 -- Scroll to bottom for license information and copyright notice
 
 
@@ -16,7 +16,7 @@ ProjectileCastResult.__index = ProjectileCastResult;
 type ProjectileCastResultImpl = 
 	{
 		__index: ProjectileCastResultImpl;
-		new: (totalDistance : number, PFinal : Vector3, VFinal : Vector3, LastRayResult : RaycastResult?) -> ProjectileCastResult;
+		new: (totalDistance : number, pFinal : Vector3, vFinal : Vector3, lastRayResult : RaycastResult?) -> ProjectileCastResult;
 	}
 type ProjectileCastResultVars = 
 	{
@@ -28,12 +28,12 @@ type ProjectileCastResultVars =
 
 export type ProjectileCastResult = typeof( setmetatable({} :: ProjectileCastResultVars, {} :: ProjectileCastResultImpl));
 
-function ProjectileCastResult.new(TotalDistance : number, PFinal : Vector3, VFinal : Vector3, LastRayResult : RaycastResult?) : ProjectileCastResult
+function ProjectileCastResult.new(totalDistance : number, pFinal : Vector3, vFinal : Vector3, lastRayResult : RaycastResult?) : ProjectileCastResult
 	local self = {};
-	self.TotalDistance = TotalDistance;
-	self.Velocity = VFinal;
-	self.Position = PFinal;
-	self.LastRayResult = LastRayResult;
+	self.TotalDistance = totalDistance;
+	self.Velocity = vFinal;
+	self.Position = pFinal;
+	self.LastRayResult = lastRayResult;
 	return setmetatable(self, ProjectileCastResult);
 end
 
@@ -48,10 +48,10 @@ ProjectileCast.__index = ProjectileCast;
 type ProjectileCastImpl = 
 	{
 		__index: ProjectileCastImpl;
-		new: (position : Vector3, velocity : Vector3, precision : number, isHighFidelity:boolean, maxDist : number?, rayParams : RaycastParams?, gravity : number?) -> ProjectileCast;
+		new: (position : Vector3, velocity : Vector3, precision : number, isHighFidelity : boolean, maxDist : number?, rayParams : RaycastParams?, gravity : number?) -> ProjectileCast;
 		Step: (self : ProjectileCast, precisionOverride : number?) -> (boolean, ProjectileCastResult);
 		Cast: (self : ProjectileCast) -> (boolean, ProjectileCastResult);
-		DoProjection: (position : Vector3, velocity : Vector3, precision : number, isHighFidelity:boolean, maxDist : number?, rayParams : RaycastParams?, gravity : number?) -> (boolean, ProjectileCastResult);
+		DoProjection: (position : Vector3, velocity : Vector3, precision : number, isHighFidelity : boolean, maxDist : number?, rayParams : RaycastParams?, gravity : number?) -> (boolean, ProjectileCastResult);
 	}
 type ProjectileCastVars = 
 	{
@@ -87,14 +87,14 @@ end
 --- [NOTE] The LastRayResult property of the result will be nil unless a collision has occured
 function ProjectileCast:Step(precisionOverride : number?) : (boolean, ProjectileCastResult)
 	local len = (precisionOverride or self.precision);
-	local pos:Vector3, vel:Vector3 = self.curve:Project(self.cTime);
+	local pos : Vector3, vel : Vector3 = self.curve:Project(self.cTime);
 	local toNext : Vector3 = vel * len;
-	if(self.highFidelity)then
-		local posNext:Vector3, velNext:Vector3 = self.curve:Project(self.cTime + len);
+	if (self.highFidelity) then
+		local posNext : Vector3, velNext : Vector3 = self.curve:Project(self.cTime + len);
 		toNext = posNext - pos;
 	end
 	local rayResult : RaycastResult? = workspace:Raycast(pos, toNext, self.rayParams);
-	if(rayResult)then
+	if (rayResult) then
 		self.cDist += rayResult.Distance;
 		return true, ProjectileCastResult.new(self.cDist, pos, vel, rayResult);
 	end
@@ -112,14 +112,14 @@ end
 ---  > result		: ProjectileCastResult
 --- [NOTE] The LastRayResult property of the result will be nil unless a collision has occured
 function ProjectileCast:Cast() : (boolean, ProjectileCastResult)
-	local coll : boolean, r : ProjectileCastResult;
+	local coll : boolean, result : ProjectileCastResult;
 	while (self.cDist < self.maxDist) do
-		coll, r = self:Step();
-		if(coll)then
-			return true, r;
+		coll, result = self:Step();
+		if (coll) then
+			return true, result;
 		end
 	end
-	return false, r;
+	return false, result;
 end
 
 --- [ Run a full simulation to its end without having to handle the object]
@@ -129,7 +129,7 @@ end
 ---  > did collide? : boolean
 ---  > result		: ProjectileCastResult
 --- [NOTE] The LastRayResult property of the result will be nil unless a collision has occured
-function ProjectileCast.DoProjection(position : Vector3, velocity : Vector3, precision : number, isHighFidelity:boolean, maxDist : number?, rayParams : RaycastParams?, gravity : number?) : (boolean, ProjectileCastResult)
+function ProjectileCast.DoProjection(position : Vector3, velocity : Vector3, precision : number, isHighFidelity : boolean, maxDist : number?, rayParams : RaycastParams?, gravity : number?) : (boolean, ProjectileCastResult)
 	local pc : ProjectileCast = ProjectileCast.new(position, velocity, precision, isHighFidelity, maxDist, rayParams, gravity);
 	return pc:Cast();
 end
